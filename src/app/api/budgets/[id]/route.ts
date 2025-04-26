@@ -3,85 +3,58 @@ import connectDB from '@/lib/db';
 import Budget from '@/models/budget';
 import Category from '@/models/category';
 
-export async function DELETE(
-  request: NextRequest,
-  context: { params: Record<string, string> }
-) {
-  const { id } = context.params;
+// DELETE handler
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const { id } = params;
+    
     if (!id) {
-      return NextResponse.json(
-        { error: 'Budget ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Budget ID is required' }, { status: 400 });
     }
     
     await connectDB();
     
-    // Find and delete the budget
     const deletedBudget = await Budget.findByIdAndDelete(id);
     
     if (!deletedBudget) {
-      return NextResponse.json(
-        { error: 'Budget not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Budget not found' }, { status: 404 });
     }
     
-    return NextResponse.json(
-      { message: 'Budget deleted successfully' },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: 'Budget deleted successfully' }, { status: 200 });
   } catch (error) {
     console.error('Error deleting budget:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete budget' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to delete budget' }, { status: 500 });
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  context: { params: Record<string, string> }
-) {
-  const { id } = context.params;
+// PUT handler
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const { id } = params;
+    
     if (!id) {
-      return NextResponse.json(
-        { error: 'Budget ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Budget ID is required' }, { status: 400 });
     }
     
-    const body = await request.json();
+    const body = await req.json();
     const { category, amount, month, year } = body;
     
     if (!category || !amount || !month || !year) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
     
     await connectDB();
     
-    // Find the budget to update
     const existingBudget = await Budget.findById(id);
     
     if (!existingBudget) {
-      return NextResponse.json(
-        { error: 'Budget not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Budget not found' }, { status: 404 });
     }
     
-    // Get category information
     const categoryInfo = await Category.findById(category);
     const categoryName = categoryInfo ? categoryInfo.name : 'Uncategorized';
     
     try {
-      // Check if there's already a budget with the same category/month/year (excluding this one)
       const duplicateBudget = await Budget.findOne({
         _id: { $ne: id },
         category: category,
@@ -96,7 +69,6 @@ export async function PUT(
         );
       }
       
-      // Update the budget
       existingBudget.category = category;
       existingBudget.amount = amount;
       existingBudget.month = month;
@@ -111,7 +83,6 @@ export async function PUT(
       );
     }
     
-    // Return the updated budget with category name for display
     return NextResponse.json({
       id: existingBudget._id,
       category: categoryName,
@@ -123,9 +94,6 @@ export async function PUT(
     });
   } catch (error) {
     console.error('Error updating budget:', error);
-    return NextResponse.json(
-      { error: 'Failed to update budget' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to update budget' }, { status: 500 });
   }
 }

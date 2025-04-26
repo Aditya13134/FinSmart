@@ -9,8 +9,6 @@ export async function DELETE(
 ) {
   const { id } = context.params;
   try {
-    const id = params.id;
-    
     if (!id) {
       return NextResponse.json(
         { error: 'Budget ID is required' },
@@ -49,8 +47,6 @@ export async function PUT(
 ) {
   const { id } = context.params;
   try {
-    const id = params.id;
-    
     if (!id) {
       return NextResponse.json(
         { error: 'Budget ID is required' },
